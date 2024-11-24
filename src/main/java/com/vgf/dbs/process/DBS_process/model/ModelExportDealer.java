@@ -1,11 +1,19 @@
 package com.vgf.dbs.process.DBS_process.model;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+
 import java.util.Date;
 
+@Entity
 public class ModelExportDealer {
 
-    // Fields
+    @Id
+    @Column(name = "dealerId")
     private String dealerId;
+
     private String dealerCountryCode;
     private String dealerDivCode;
     private Date updateDate;

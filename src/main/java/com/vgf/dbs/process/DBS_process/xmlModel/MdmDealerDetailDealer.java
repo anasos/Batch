@@ -18,14 +18,14 @@ import java.util.List;
 public class MdmDealerDetailDealer implements Serializable {
 
     private List<MdmDealerDetailDealerDepartment> departments = new ArrayList<>();
-    private MdmDealerDetailDealerAddress[] addresses;
+    private List<MdmDealerDetailDealerAddress> addresses = new ArrayList<>();
     private MdmDealerDetailDealerDealerMarketingAllowances dealerMarketingAllowances;
-    private MdmDealerDetailDealerDealerCategorization[] dealerCategorizations;
-    private MdmDealerDetailDealerDealerIndicator[] dealerIndicators;
-    private MdmDealerDetailDealerServiceOffered[] servicesOffered;
-    private MdmDealerDetailDealerDealerDate[] dealerDates;
+    private List<MdmDealerDetailDealerDealerCategorization> dealerCategorizations = new ArrayList<>();
+    private List<MdmDealerDetailDealerDealerIndicator> dealerIndicators = new ArrayList<>();
+    private List<MdmDealerDetailDealerServiceOffered> servicesOffered = new ArrayList<>();
+    private List<MdmDealerDetailDealerDealerDate> dealerDates = new ArrayList<>();
     private String dealerLanguageCode;
-    private MdmDealerDetailDealerDealerStatus[] dealerStatuses;
+    private List<MdmDealerDetailDealerDealerStatus> dealerStatuses = new ArrayList<>();
     private MdmDealerDetailDealerDealerName[] dealerNames;
     private MdmDealerDetailDealerRelatedDealer[] relatedDealers;
     private MdmDealerDetailDealerDealerPreference[] dealerPreferences;
@@ -51,11 +51,11 @@ public class MdmDealerDetailDealer implements Serializable {
 
     @XmlElementWrapper(name = "addresses")
     @XmlElement(name = "address")
-    public MdmDealerDetailDealerAddress[] getAddresses() {
+    public List<MdmDealerDetailDealerAddress> getAddresses() {
         return addresses;
     }
 
-    public void setAddresses(MdmDealerDetailDealerAddress[] addresses) {
+    public void setAddresses(List<MdmDealerDetailDealerAddress> addresses) {
         this.addresses = addresses;
     }
 
@@ -70,41 +70,41 @@ public class MdmDealerDetailDealer implements Serializable {
 
     @XmlElementWrapper(name = "dealerCategorizations")
     @XmlElement(name = "dealerCategorization")
-    public MdmDealerDetailDealerDealerCategorization[] getDealerCategorizations() {
+    public List<MdmDealerDetailDealerDealerCategorization> getDealerCategorizations() {
         return dealerCategorizations;
     }
 
-    public void setDealerCategorizations(MdmDealerDetailDealerDealerCategorization[] dealerCategorizations) {
+    public void setDealerCategorizations(List<MdmDealerDetailDealerDealerCategorization> dealerCategorizations) {
         this.dealerCategorizations = dealerCategorizations;
     }
 
     @XmlElementWrapper(name = "dealerIndicators")
     @XmlElement(name = "dealerIndicator")
-    public MdmDealerDetailDealerDealerIndicator[] getDealerIndicators() {
+    public List<MdmDealerDetailDealerDealerIndicator> getDealerIndicators() {
         return dealerIndicators;
     }
 
-    public void setDealerIndicators(MdmDealerDetailDealerDealerIndicator[] dealerIndicators) {
+    public void setDealerIndicators(List<MdmDealerDetailDealerDealerIndicator> dealerIndicators) {
         this.dealerIndicators = dealerIndicators;
     }
 
     @XmlElementWrapper(name = "servicesOffered")
     @XmlElement(name = "serviceOffered")
-    public MdmDealerDetailDealerServiceOffered[] getServicesOffered() {
+    public List<MdmDealerDetailDealerServiceOffered> getServicesOffered() {
         return servicesOffered;
     }
 
-    public void setServicesOffered(MdmDealerDetailDealerServiceOffered[] servicesOffered) {
+    public void setServicesOffered(List<MdmDealerDetailDealerServiceOffered> servicesOffered) {
         this.servicesOffered = servicesOffered;
     }
 
     @XmlElementWrapper(name = "dealerDates")
     @XmlElement(name = "dealerDate")
-    public MdmDealerDetailDealerDealerDate[] getDealerDates() {
+    public List<MdmDealerDetailDealerDealerDate> getDealerDates() {
         return dealerDates;
     }
 
-    public void setDealerDates(MdmDealerDetailDealerDealerDate[] dealerDates) {
+    public void setDealerDates(List<MdmDealerDetailDealerDealerDate> dealerDates) {
         this.dealerDates = dealerDates;
     }
 
@@ -119,11 +119,11 @@ public class MdmDealerDetailDealer implements Serializable {
 
     @XmlElementWrapper(name = "dealerStatuses")
     @XmlElement(name = "dealerStatus")
-    public MdmDealerDetailDealerDealerStatus[] getDealerStatuses() {
+    public List<MdmDealerDetailDealerDealerStatus> getDealerStatuses() {
         return dealerStatuses;
     }
 
-    public void setDealerStatuses(MdmDealerDetailDealerDealerStatus[] dealerStatuses) {
+    public void setDealerStatuses(List<MdmDealerDetailDealerDealerStatus> dealerStatuses) {
         this.dealerStatuses = dealerStatuses;
     }
 

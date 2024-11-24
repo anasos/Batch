@@ -9,7 +9,7 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface ConfigRepository extends JpaRepository<ConfigEntity, Long> {
 
-    @Procedure(procedureName = "SP_GET_CONFIG_VALUE")
+    @Procedure(procedureName = "PKG_DBS.SP_GET_CONFIG_VALUE")
     String getConfigValue(String key);
 }
 

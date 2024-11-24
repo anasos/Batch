@@ -3,9 +3,15 @@ package com.vgf.dbs.process.DBS_process.service;
 
 import com.vgf.dbs.process.DBS_process.model.*;
 import org.hibernate.dialect.OracleTypes;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.sql.*;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -13,6 +19,18 @@ import java.util.logging.Logger;
 
 @Service
 public class ProcessService {
+
+    @Value("${spring.datasource.url}")
+    private String connectionString;
+
+    @Value("${spring.datasource.username}")
+    private String user;
+
+    @Value("${spring.datasource.password}")
+    private String userPass;
+
+    @Autowired
+    private DealerService dealerService;
 
     public static final String IMPORT_RR = "IMPORT_RR";
     public static final String IMPORT_PART = "IMPORT_PART";
@@ -53,11 +71,12 @@ public class ProcessService {
         return processId;
     }
 
-    public List<ModelExportDepartement> callGetDepartementInfosDBS(String connectionString, int processId, String dealrID) {
+    public List<ModelExportDepartement> callGetDepartementInfosDBS(Connection connection, int processId, String dealrID) {
         List<ModelExportDepartement> listResult = new ArrayList<>();
 
-        try (Connection connection = DriverManager.getConnection(connectionString);
-             CallableStatement stmt = connection.prepareCall("{call PKG_DBS.SP_GetAllDepartementInfos(?, ?, ?)}")) {
+        //Connection connection = DriverManager.getConnection(connectionString, user, userPass);
+
+        try (CallableStatement stmt = connection.prepareCall("{call PKG_DBS.SP_GetAllDepartementInfos(?, ?, ?)}")) {
 
             // Set input parameters
             stmt.setInt(1, processId);
@@ -103,13 +122,21 @@ public class ProcessService {
         return listResult;
     }
 
-    public List<ModelExportDealerService> callGetDealerServicesDBS(String connectionString, int processId) {
+    public List<ModelExportDealerService> callGetDealerServicesDBS(Connection connection, int processId, String dealerID) {
         List<ModelExportDealerService> listResult = new ArrayList<>();
 
         String sql = "SELECT * FROM DEALER_SERVICES WHERE PROCESS_ID = ?";
 
-        try (Connection connection = DriverManager.getConnection(connectionString);
-             PreparedStatement stmt = connection.prepareStatement(sql)) {
+        String storedProcedure = "{call PKG_DBS.SP_GetAllDealerServices(?, ?, ?)}";
+
+        try (CallableStatement stmt = connection.prepareCall(storedProcedure)) {
+
+            // Set input parameters
+            stmt.setInt(1, processId);
+            stmt.setString(2, dealerID);
+
+            // Register output parameter
+            stmt.registerOutParameter(3, OracleTypes.CURSOR);
 
             stmt.setInt(1, processId);
             ResultSet rs = stmt.executeQuery();
@@ -128,21 +155,39 @@ public class ProcessService {
         return listResult;
     }
 
-    public List<ModelExportHoraire> callGetHoraireDBS(String connectionString, int processId) {
+    public List<ModelExportHoraire> callGetHoraireDBS(Connection connection, int processId, String noContrat, String deptCode) {
         List<ModelExportHoraire> listResult = new ArrayList<>();
 
         String sql = "SELECT * FROM DEALER_HORAIRES WHERE PROCESS_ID = ?";
 
-        try (Connection connection = DriverManager.getConnection(connectionString);
-             PreparedStatement stmt = connection.prepareStatement(sql)) {
-
+        try (CallableStatement stmt = connection.prepareCall("{call PKG_DBS.SP_GETHORAIRES(?, ?, ?, ?)}")) {
+            // Set input parameters
             stmt.setInt(1, processId);
+            stmt.setString(2, noContrat);
+            stmt.setString(3, deptCode);
+
+            // Register output parameter (REF_CURSOR)
+            stmt.registerOutParameter(4, OracleTypes.CURSOR);
+
             ResultSet rs = stmt.executeQuery();
 
             while (rs.next()) {
+
+                int ordinalDayOfWeekCode = rs.findColumn("dayOfWeekCode");
+                int ordinalClosedIndicator = rs.findColumn("closedIndicator");
+                int ordinalHrDebut1 = rs.findColumn("HR_DEBUT_1");
+                int ordinalHrFin1 = rs.findColumn("HR_FIN_1");
+                int ordinalHrDebut2 = rs.findColumn("HR_DEBUT_2");
+                int ordinalHrFin2 = rs.findColumn("HR_FIN_2");
+
                 ModelExportHoraire horaire = new ModelExportHoraire();
                 horaire.setDayOfWeekCode(rs.getString("DAY_OF_WEEK_CODE"));
                 horaire.setClosedIndicator(rs.getString("CLOSED_INDICATOR"));
+                horaire.setHR_DEBUT_1(rs.getString(ordinalHrDebut1));
+                horaire.setHR_FIN_1(rs.getString(ordinalHrFin1));
+                horaire.setHR_DEBUT_2(rs.getString(ordinalHrDebut2));
+                horaire.setHR_FIN_2(rs.getString(ordinalHrFin2));
+
                 // Map other fields
                 listResult.add(horaire);
             }
@@ -154,7 +199,7 @@ public class ProcessService {
         return listResult;
     }
 
-    public List<ModelExportTypeCode> callGetTypeCodesDBS(String connectionString, int processId) {
+    public List<ModelExportTypeCode> callGetTypeCodesDBS(int processId) {
         List<ModelExportTypeCode> listResult = new ArrayList<>();
 
         String sql = "SELECT * FROM DEALER_TYPE_CODES WHERE PROCESS_ID = ?";
@@ -181,30 +226,87 @@ public class ProcessService {
         return listResult;
     }
 
-    public List<ModelExportDealer> callGetDealerInfosDBS(String connectionString, int processId) {
+    public List<ModelExportDealer> callGetDealerInfosDBS(int processId) {
         List<ModelExportDealer> listResult = new ArrayList<>();
 
-        String sql = "SELECT * FROM DEALERS WHERE PROCESS_ID = ?";
+        //List<ModelExportDealer> modelExportDealers  = dealerService.getAllDealerInfos(processId);
 
-        try (Connection connection = DriverManager.getConnection(connectionString);
-             PreparedStatement stmt = connection.prepareStatement(sql)) {
+        //String sql = "SELECT * FROM DEALERS WHERE PROCESS_ID = ?";
 
-            stmt.setInt(1, processId);
-            ResultSet rs = stmt.executeQuery();
+        try (Connection connection = DriverManager.getConnection(connectionString, user, userPass);
+             CallableStatement callableStatement = connection.prepareCall("{call PKG_DBS.SP_GetAllDealerInfos(?, ?)}")) {
 
-            while (rs.next()) {
-                ModelExportDealer dealer = new ModelExportDealer();
-                dealer.setDealerId(rs.getString("DEALER_ID"));
-                dealer.setDealerCountryCode(rs.getString("DEALER_COUNTRY_CODE"));
-                dealer.setDealerDivCode(rs.getString("DEALER_DIV_CODE"));
-                //dealer.setUpdateDate(rs.getString("UPDATE_DATE"));
-                dealer.setDealerTypeCode(rs.getString("DEALER_TYPE_CODE"));
-                // Map other fields
-                listResult.add(dealer);
+            // Set the input parameter
+            callableStatement.setInt(1, processId);
+
+            // Register the REF CURSOR as an output parameter
+            callableStatement.registerOutParameter(2, OracleTypes.CURSOR);
+
+            // Execute the procedure
+            callableStatement.execute();
+
+            // Process the result set
+            try (ResultSet resultSet = (ResultSet) callableStatement.getObject(2)) {
+                while (resultSet.next()) {
+                    ModelExportDealer dealer = new ModelExportDealer();
+                    dealer.setDealerId(resultSet.getString("dealerId"));
+                    dealer.setDealerCountryCode(resultSet.getString("dealerCountryCode"));
+                    dealer.setDealerDivCode(resultSet.getString("dealerDivCode"));
+
+                    String dateStr = resultSet.getString("updateDate");
+                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+                    // Parse string to LocalDateTime
+                    LocalDateTime localDateTime = LocalDateTime.parse(dateStr, formatter);
+
+                    // Convert LocalDateTime to java.util.Date
+                    Date date = Date.from(localDateTime.atZone(ZoneId.systemDefault()).toInstant());
+
+                    dealer.setUpdateDate(date);
+
+                    dealer.setDealerTypeCode(resultSet.getString("dealerTypeCode"));
+                    dealer.setDealerLanguageCode(resultSet.getString("dealerLanguageCode"));
+                    dealer.setAddressLine1(resultSet.getString("addressLine1"));
+                    dealer.setAddressLine2(resultSet.getString("addressLine2"));
+                    dealer.setCityName(resultSet.getString("cityName"));
+                    dealer.setStateProvinceCode(resultSet.getString("stateProvinceCode"));
+                    dealer.setCountryCode(resultSet.getString("countryCode"));
+                    dealer.setZipPostalCode(resultSet.getString("zipPostalCode"));
+                    dealer.setZipcodeSuffix(resultSet.getString("zipcodeSuffix"));
+                    dealer.setLongitude(resultSet.getDouble("longitude"));
+                    dealer.setLatitude(resultSet.getDouble("latitude"));
+                    dealer.setDepartmentCode(resultSet.getString("departmentCode"));
+                    dealer.setAddressTypeCode(resultSet.getString("addressTypeCode"));
+                    dealer.setCategorizationCode(resultSet.getString("categorizationCode"));
+                    dealer.setCategorizationTypeCode(resultSet.getString("categorizationTypeCode"));
+                    dealer.setDealerDateData(resultSet.getString("dealerDateData"));
+                    dealer.setDateTypeCode(resultSet.getString("dateTypeCode"));
+                    dealer.setDealerDateDataFin(resultSet.getString("dealerDateDataFin"));
+                    dealer.setDateTypeCodeFin(resultSet.getString("dateTypeCodeFin"));
+                    dealer.setStatusCode(resultSet.getString("statusCode"));
+                    dealer.setStatusTypeCode(resultSet.getString("statusTypeCode"));
+                    dealer.setStatusCode2(resultSet.getString("statusCode2"));
+                    dealer.setStatusTypeCode2(resultSet.getString("statusTypeCode2"));
+                    dealer.setDealerNameData(resultSet.getString("dealerNameData"));
+                    dealer.setNameTypeCode(resultSet.getString("nameTypeCode"));
+//                    dealer.setGDealerNameData(resultSet.getString("G_dealerNameData"));
+//                    dealer.setGNameTypeCode(resultSet.getString("G_nameTypeCode"));
+                    dealer.setDealerPreferencetDetail(resultSet.getString("dealerPreferencetDetail"));
+                    dealer.setDealerPreferencetDetail2(resultSet.getString("dealerPreferencetDetail2"));
+                    dealer.setDealerPreferencetDetail3(resultSet.getString("dealerPreferencetDetail3"));
+                    dealer.setDealerPreferencetDetail4(resultSet.getString("dealerPreferencetDetail4"));
+                    dealer.setDealerPreferenceTypeCode(resultSet.getString("dealerPreferenceTypeCode"));
+                    dealer.setUrl(resultSet.getString("url"));
+                    dealer.setUrlFunctionCode(resultSet.getString("urlFunctionCode"));
+                    dealer.setUrl2(resultSet.getString("url2"));
+                    dealer.setUrlFunctionCode2(resultSet.getString("urlFunctionCode2"));
+//                    dealer.setMentionLegale(resultSet.getString("mentionLegale"));
+
+                    listResult.add(dealer);
+                }
             }
-
-        } catch (SQLException ex) {
-            logger.severe("Error fetching dealer info: " + ex.getMessage());
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
 
         return listResult;
