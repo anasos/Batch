@@ -10,6 +10,10 @@ public class BatchMethodRunner implements CommandLineRunner {
 
     private ExportDBS exportDBS;
 
+    public ExportDBS getExportDBS() {
+        return exportDBS;
+    }
+
     public BatchMethodRunner(ExportDBS exportDBS) {
         this.exportDBS = exportDBS;
     }
@@ -18,7 +22,7 @@ public class BatchMethodRunner implements CommandLineRunner {
     public void run(String... args) throws Exception {
         if (args.length > 0) {
             String methodName = args[0];
-            if (methodName.equals("generateXML")) {
+            if (methodName.equals("exportDBS")) {
                 exportDBS.generateXML();
             } else {
                 System.out.println("Invalid method name: " + methodName);

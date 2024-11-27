@@ -8,11 +8,12 @@ import javax.xml.bind.annotation.XmlType;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 import java.io.Serializable;
 import java.util.Date;
+import java.util.List;
 
-@XmlType(name = "")
+@XmlType(name = "", propOrder = {"typeCodes", "numberOfDealers", "exportTimeStamp"})
 public class MdmDealerDetailMeta implements Serializable {
 
-    private MdmDealerDetailMetaTypeCode[] typeCodes;
+    private List<MdmDealerDetailMetaTypeCode> typeCodes;
     private String numberOfDealers;
     private Date exportTimeStamp;
 
@@ -20,11 +21,11 @@ public class MdmDealerDetailMeta implements Serializable {
 
     @XmlElementWrapper(name = "typeCodes")
     @XmlElement(name = "typeCode")
-    public MdmDealerDetailMetaTypeCode[] getTypeCodes() {
+    public List<MdmDealerDetailMetaTypeCode> getTypeCodes() {
         return typeCodes;
     }
 
-    public void setTypeCodes(MdmDealerDetailMetaTypeCode[] typeCodes) {
+    public void setTypeCodes(List<MdmDealerDetailMetaTypeCode> typeCodes) {
         this.typeCodes = typeCodes;
     }
 

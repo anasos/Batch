@@ -4,21 +4,22 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 import java.io.Serializable;
+import java.util.List;
 
 @XmlType(name = "", propOrder = {"dealerPreferenceDetails"})
 public class MdmDealerDetailDealerDealerPreference implements Serializable {
 
-    private MdmDealerDetailDealerDealerPreferenceDealerPreferenceDetails[] dealerPreferenceDetails;
+    private List<MdmDealerDetailDealerDealerPreferenceDealerPreferenceDetails> dealerPreferenceDetails;
     private String dealerPreferenceTypeCode;
 
     // Getters and Setters
 
     @XmlElement(name = "dealerPreferenceDetails")
-    public MdmDealerDetailDealerDealerPreferenceDealerPreferenceDetails[] getDealerPreferenceDetails() {
+    public List<MdmDealerDetailDealerDealerPreferenceDealerPreferenceDetails> getDealerPreferenceDetails() {
         return dealerPreferenceDetails;
     }
 
-    public void setDealerPreferenceDetails(MdmDealerDetailDealerDealerPreferenceDealerPreferenceDetails[] dealerPreferenceDetails) {
+    public void setDealerPreferenceDetails(List<MdmDealerDetailDealerDealerPreferenceDealerPreferenceDetails> dealerPreferenceDetails) {
         this.dealerPreferenceDetails = dealerPreferenceDetails;
     }
 

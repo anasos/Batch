@@ -46,26 +46,35 @@ public class ProcessService {
     private static final Logger logger = Logger.getLogger(ProcessService.class.getName());
 
     // Method to initialize a new process
-    public int initializeNewProcess(String connectionString, String type) {
+    public int initializeNewProcess(Connection connection, String type) {
         int processId = -1;
 
-        try (Connection connection = DriverManager.getConnection(connectionString);
-             CallableStatement stmt = connection.prepareCall("{call PKG_DBS.SP_CREATE_PROCESS(?, ?)}")) {
+        try (CallableStatement callableStatement = connection.prepareCall("{call PKG_DBS.SP_CREATE_PROCESS(?, ?, ?, ?)}")) {
+            // Set the input parameter
+            callableStatement.setString(1, type);
 
-            // Set input parameter
-            stmt.setString(1, type);
-
-            // Register output parameter
-            stmt.registerOutParameter(2, Types.INTEGER);
+            // Register the output parameters
+            callableStatement.registerOutParameter(2, Types.INTEGER);
+            callableStatement.registerOutParameter(3, Types.VARCHAR);
+            callableStatement.registerOutParameter(4, Types.VARCHAR);
 
             // Execute the stored procedure
-            stmt.execute();
+            callableStatement.execute();
 
-            // Retrieve the output parameter (processId)
-            processId = stmt.getInt(2);
+            // Check for errors in the output parameters
+            String errorSqlCode = callableStatement.getString(3);
+            String errorDescription = callableStatement.getString(4);
+
+            if (errorSqlCode != null && !errorSqlCode.isEmpty()) {
+                logger.severe("Error from procedure 'PKG_DBS.SP_CREATE_PROCESS': " + errorDescription);
+                processId = -1;
+            } else {
+                processId = callableStatement.getInt(2);
+            }
 
         } catch (SQLException ex) {
-            logger.severe("Error initializing new process: " + ex.getMessage());
+            processId = -1;
+            logger.severe("Error while creating process in table TS_PROCESS: " + ex.getMessage());
         }
 
         return processId;
@@ -138,14 +147,24 @@ public class ProcessService {
             // Register output parameter
             stmt.registerOutParameter(3, OracleTypes.CURSOR);
 
-            stmt.setInt(1, processId);
-            ResultSet rs = stmt.executeQuery();
+            stmt.execute();
 
-            while (rs.next()) {
-                ModelExportDealerService service = new ModelExportDealerService();
-                service.setServiceTypeCode(rs.getString("SERVICE_TYPE_CODE"));
-                // Map other fields if needed
-                listResult.add(service);
+            // Retrieve the result set
+            try (ResultSet rs = (ResultSet) stmt.getObject(3)) {
+                if (!rs.isBeforeFirst()) { // Checks if ResultSet is empty
+                    return listResult;
+                }
+
+                // Get ordinal index for columns
+                int ordinalServiceTypeCode = rs.findColumn("serviceTypeCode");
+
+
+                while (rs.next()) {
+                    ModelExportDealerService service = new ModelExportDealerService();
+                    service.setServiceTypeCode(rs.getString(ordinalServiceTypeCode));
+                    // Map other fields if needed
+                    listResult.add(service);
+                }
             }
 
         } catch (SQLException ex) {
@@ -168,10 +187,12 @@ public class ProcessService {
 
             // Register output parameter (REF_CURSOR)
             stmt.registerOutParameter(4, OracleTypes.CURSOR);
+            stmt.execute();
 
-            ResultSet rs = stmt.executeQuery();
-
-            while (rs.next()) {
+            try (ResultSet rs = (ResultSet) stmt.getObject(4)) {
+                if (!rs.next()) {
+                    return listResult;
+                }
 
                 int ordinalDayOfWeekCode = rs.findColumn("dayOfWeekCode");
                 int ordinalClosedIndicator = rs.findColumn("closedIndicator");
@@ -180,16 +201,20 @@ public class ProcessService {
                 int ordinalHrDebut2 = rs.findColumn("HR_DEBUT_2");
                 int ordinalHrFin2 = rs.findColumn("HR_FIN_2");
 
-                ModelExportHoraire horaire = new ModelExportHoraire();
-                horaire.setDayOfWeekCode(rs.getString("DAY_OF_WEEK_CODE"));
-                horaire.setClosedIndicator(rs.getString("CLOSED_INDICATOR"));
-                horaire.setHR_DEBUT_1(rs.getString(ordinalHrDebut1));
-                horaire.setHR_FIN_1(rs.getString(ordinalHrFin1));
-                horaire.setHR_DEBUT_2(rs.getString(ordinalHrDebut2));
-                horaire.setHR_FIN_2(rs.getString(ordinalHrFin2));
+                do {
 
-                // Map other fields
-                listResult.add(horaire);
+                    ModelExportHoraire horaire = new ModelExportHoraire();
+                    horaire.setDayOfWeekCode(rs.getString(ordinalDayOfWeekCode));
+                    horaire.setClosedIndicator(rs.getString(ordinalClosedIndicator));
+                    horaire.setHR_DEBUT_1(rs.getString(ordinalHrDebut1));
+                    horaire.setHR_FIN_1(rs.getString(ordinalHrFin1));
+                    horaire.setHR_DEBUT_2(rs.getString(ordinalHrDebut2));
+                    horaire.setHR_FIN_2(rs.getString(ordinalHrFin2));
+
+                    // Map other fields
+                    listResult.add(horaire);
+                } while (rs.next());
+
             }
 
         } catch (SQLException ex) {
@@ -199,24 +224,40 @@ public class ProcessService {
         return listResult;
     }
 
-    public List<ModelExportTypeCode> callGetTypeCodesDBS(int processId) {
+    public List<ModelExportTypeCode> callGetTypeCodesDBS(Connection connection, int processId) {
         List<ModelExportTypeCode> listResult = new ArrayList<>();
 
-        String sql = "SELECT * FROM DEALER_TYPE_CODES WHERE PROCESS_ID = ?";
+//        String sql = "SELECT * FROM DEALER_TYPE_CODES WHERE PROCESS_ID = ?";
+        try (CallableStatement stmt = connection.prepareCall("{call PKG_DBS.SP_GetAllTypeCodes(?, ?)}")) {
 
-        try (Connection connection = DriverManager.getConnection(connectionString);
-             PreparedStatement stmt = connection.prepareStatement(sql)) {
-
+            // Set input parameters
             stmt.setInt(1, processId);
-            ResultSet rs = stmt.executeQuery();
+            stmt.registerOutParameter(2, OracleTypes.CURSOR);
 
-            while (rs.next()) {
-                ModelExportTypeCode typeCode = new ModelExportTypeCode();
-                typeCode.setTypeCodeCategory(rs.getString("TYPE_CODE_CATEGORY"));
-                typeCode.setTypeCodeValue(rs.getString("TYPE_CODE_VALUE"));
-                typeCode.setTypeCodeDesc(rs.getString("TYPE_CODE_DESC"));
-                // Map other fields
-                listResult.add(typeCode);
+            stmt.execute();
+
+            try (ResultSet resultSet = (ResultSet) stmt.getObject(2)) {
+                if (!resultSet.next()) {
+                    return listResult; // No rows
+                }
+
+                // Get column indices
+                int ordinalTypeCodeCategory = resultSet.findColumn("typeCodeCategory");
+                int ordinalTypeCodeValue = resultSet.findColumn("typeCodeValue");
+                int ordinalTypeCodeDesc = resultSet.findColumn("typeCodeDesc");
+                int ordinalParentTypeCodeValue = resultSet.findColumn("parentTypeCodeValue");
+
+                // Read the result set
+                do {
+                    ModelExportTypeCode result = new ModelExportTypeCode();
+                    result.setTypeCodeCategory(resultSet.getString(ordinalTypeCodeCategory));
+                    result.setTypeCodeValue(resultSet.getString(ordinalTypeCodeValue));
+                    result.setTypeCodeDesc(resultSet.getString(ordinalTypeCodeDesc));
+                    result.setParentTypeCodeValue(resultSet.getString(ordinalParentTypeCodeValue));
+
+                    listResult.add(result);
+
+                } while (resultSet.next());
             }
 
         } catch (SQLException ex) {
@@ -248,6 +289,7 @@ public class ProcessService {
             // Process the result set
             try (ResultSet resultSet = (ResultSet) callableStatement.getObject(2)) {
                 while (resultSet.next()) {
+
                     ModelExportDealer dealer = new ModelExportDealer();
                     dealer.setDealerId(resultSet.getString("dealerId"));
                     dealer.setDealerCountryCode(resultSet.getString("dealerCountryCode"));
@@ -262,7 +304,8 @@ public class ProcessService {
                     // Convert LocalDateTime to java.util.Date
                     Date date = Date.from(localDateTime.atZone(ZoneId.systemDefault()).toInstant());
 
-                    dealer.setUpdateDate(date);
+                    LocalDate localDate = localDateTime.toLocalDate();
+                    dealer.setUpdateDate(localDate);
 
                     dealer.setDealerTypeCode(resultSet.getString("dealerTypeCode"));
                     dealer.setDealerLanguageCode(resultSet.getString("dealerLanguageCode"));
@@ -289,8 +332,8 @@ public class ProcessService {
                     dealer.setStatusTypeCode2(resultSet.getString("statusTypeCode2"));
                     dealer.setDealerNameData(resultSet.getString("dealerNameData"));
                     dealer.setNameTypeCode(resultSet.getString("nameTypeCode"));
-//                    dealer.setGDealerNameData(resultSet.getString("G_dealerNameData"));
-//                    dealer.setGNameTypeCode(resultSet.getString("G_nameTypeCode"));
+                    dealer.setG_dealerNameData(resultSet.getString("G_dealerNameData"));
+                    dealer.setG_nameTypeCode(resultSet.getString("G_nameTypeCode"));
                     dealer.setDealerPreferencetDetail(resultSet.getString("dealerPreferencetDetail"));
                     dealer.setDealerPreferencetDetail2(resultSet.getString("dealerPreferencetDetail2"));
                     dealer.setDealerPreferencetDetail3(resultSet.getString("dealerPreferencetDetail3"));
@@ -306,7 +349,7 @@ public class ProcessService {
                 }
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            logger.severe("Error calling callGetDealerInfosDBS : " + e.getMessage());
         }
 
         return listResult;

@@ -1,19 +1,23 @@
 package com.vgf.dbs.process.DBS_process.xmlModel;
 
+import com.vgf.dbs.process.DBS_process.adapter.LocalDateAdapter;
+
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlType;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 import java.io.Serializable;
+import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 @XmlType(name = "", propOrder = {
         "departments", "addresses", "dealerMarketingAllowances", "dealerCategorizations",
         "dealerIndicators", "servicesOffered", "dealerDates", "dealerLanguageCode",
         "dealerStatuses", "dealerNames", "relatedDealers", "dealerPreferences",
-        "dealerUrls", "dealerMessage"
+        "dealerUrls", "dealerMessage","dealerId", "dealerCountryCode",
+        "dealerDivCode", "updateDate", "dealerTypeCode"
 })
 public class MdmDealerDetailDealer implements Serializable {
 
@@ -26,15 +30,17 @@ public class MdmDealerDetailDealer implements Serializable {
     private List<MdmDealerDetailDealerDealerDate> dealerDates = new ArrayList<>();
     private String dealerLanguageCode;
     private List<MdmDealerDetailDealerDealerStatus> dealerStatuses = new ArrayList<>();
-    private MdmDealerDetailDealerDealerName[] dealerNames;
-    private MdmDealerDetailDealerRelatedDealer[] relatedDealers;
-    private MdmDealerDetailDealerDealerPreference[] dealerPreferences;
-    private MdmDealerDetailDealerDealerUrl[] dealerUrls;
+    private List<MdmDealerDetailDealerDealerName> dealerNames;
+    private List<MdmDealerDetailDealerRelatedDealer> relatedDealers;
+    private List<MdmDealerDetailDealerDealerPreference> dealerPreferences;
+    private List<MdmDealerDetailDealerDealerUrl> dealerUrls;
     private String dealerMessage;
     private String dealerId;
     private String dealerCountryCode;
     private String dealerDivCode;
-    private Date updateDate;
+
+    private LocalDate updateDate;
+
     private String dealerTypeCode;
 
     // Getters and Setters
@@ -129,41 +135,41 @@ public class MdmDealerDetailDealer implements Serializable {
 
     @XmlElementWrapper(name = "dealerNames")
     @XmlElement(name = "dealerName")
-    public MdmDealerDetailDealerDealerName[] getDealerNames() {
+    public List<MdmDealerDetailDealerDealerName> getDealerNames() {
         return dealerNames;
     }
 
-    public void setDealerNames(MdmDealerDetailDealerDealerName[] dealerNames) {
+    public void setDealerNames(List<MdmDealerDetailDealerDealerName> dealerNames) {
         this.dealerNames = dealerNames;
     }
 
     @XmlElementWrapper(name = "relatedDealers")
     @XmlElement(name = "relatedDealer")
-    public MdmDealerDetailDealerRelatedDealer[] getRelatedDealers() {
+    public List<MdmDealerDetailDealerRelatedDealer> getRelatedDealers() {
         return relatedDealers;
     }
 
-    public void setRelatedDealers(MdmDealerDetailDealerRelatedDealer[] relatedDealers) {
+    public void setRelatedDealers(List<MdmDealerDetailDealerRelatedDealer> relatedDealers) {
         this.relatedDealers = relatedDealers;
     }
 
     @XmlElementWrapper(name = "dealerPreferences")
     @XmlElement(name = "dealerPreference")
-    public MdmDealerDetailDealerDealerPreference[] getDealerPreferences() {
+    public List<MdmDealerDetailDealerDealerPreference> getDealerPreferences() {
         return dealerPreferences;
     }
 
-    public void setDealerPreferences(MdmDealerDetailDealerDealerPreference[] dealerPreferences) {
+    public void setDealerPreferences(List<MdmDealerDetailDealerDealerPreference> dealerPreferences) {
         this.dealerPreferences = dealerPreferences;
     }
 
     @XmlElementWrapper(name = "dealerUrls")
     @XmlElement(name = "dealerUrl")
-    public MdmDealerDetailDealerDealerUrl[] getDealerUrls() {
+    public List<MdmDealerDetailDealerDealerUrl> getDealerUrls() {
         return dealerUrls;
     }
 
-    public void setDealerUrls(MdmDealerDetailDealerDealerUrl[] dealerUrls) {
+    public void setDealerUrls(List<MdmDealerDetailDealerDealerUrl> dealerUrls) {
         this.dealerUrls = dealerUrls;
     }
 
@@ -204,11 +210,12 @@ public class MdmDealerDetailDealer implements Serializable {
     }
 
     @XmlAttribute
-    public Date getUpdateDate() {
+    @XmlJavaTypeAdapter(LocalDateAdapter.class)
+    public LocalDate getUpdateDate() {
         return updateDate;
     }
 
-    public void setUpdateDate(Date updateDate) {
+    public void setUpdateDate(LocalDate updateDate) {
         this.updateDate = updateDate;
     }
 

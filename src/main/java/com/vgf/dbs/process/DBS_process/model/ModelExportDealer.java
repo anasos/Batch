@@ -5,6 +5,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
+import java.time.LocalDate;
 import java.util.Date;
 
 @Entity
@@ -16,7 +17,7 @@ public class ModelExportDealer {
 
     private String dealerCountryCode;
     private String dealerDivCode;
-    private Date updateDate;
+    private LocalDate updateDate;
     private String dealerTypeCode;
     private String dealerLanguageCode;
     private String dealerMessage;
@@ -88,11 +89,11 @@ public class ModelExportDealer {
         this.dealerDivCode = dealerDivCode;
     }
 
-    public Date getUpdateDate() {
+    public LocalDate getUpdateDate() {
         return updateDate;
     }
 
-    public void setUpdateDate(Date updateDate) {
+    public void setUpdateDate(LocalDate updateDate) {
         this.updateDate = updateDate;
     }
 

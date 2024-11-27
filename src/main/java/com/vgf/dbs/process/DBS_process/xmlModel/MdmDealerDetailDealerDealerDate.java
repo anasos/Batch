@@ -7,24 +7,23 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 import java.io.Serializable;
-import java.time.LocalDate;
 import java.util.Date;
 
 @XmlType(name = "")
 public class MdmDealerDetailDealerDealerDate implements Serializable {
 
-    private LocalDate dealerDateData;
+    private Date dealerDateData;
     private String dateTypeCode;
 
     // Getters and Setters
 
     @XmlElement(name = "dealerDateData")
     @XmlJavaTypeAdapter(DateAdapterUtil.class) // Adapter for date formatting
-    public LocalDate getDealerDateData() {
+    public Date getDealerDateData() {
         return dealerDateData;
     }
 
-    public void setDealerDateData(LocalDate dealerDateData) {
+    public void setDealerDateData(Date dealerDateData) {
         this.dealerDateData = dealerDateData;
     }
 

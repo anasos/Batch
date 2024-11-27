@@ -4,7 +4,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 import java.io.Serializable;
 
-@XmlType(name = "")
+@XmlType(name = "", propOrder = { "typeCodeCategory", "typeCodeValue", "typeCodeDesc", "parentTypeCodeValue" })
 public class MdmDealerDetailMetaTypeCode implements Serializable {
 
     private String typeCodeCategory;

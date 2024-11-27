@@ -23,17 +23,16 @@ public class ConfigurationService {
     /**
      * Retrieves a configuration value from the database using a stored procedure.
      *
-     * @param connectionString The connection string to the Oracle database
+     * @param connection The connection to the Oracle database
      * @param key              The configuration key whose value needs to be fetched
      * @return The configuration value as a String
      */
-    public String getConfigValue(String connectionString, String key) {
+    public String getConfigValue(Connection connection, String key) {
         String value = null;
 
         String storedProcedure = "{call PKG_DBS.SP_GET_CONFIG_VALUE(?, ?)}";
 
-        try (Connection connection = DriverManager.getConnection(connectionString);
-             CallableStatement stmt = connection.prepareCall(storedProcedure)) {
+        try (CallableStatement stmt = connection.prepareCall(storedProcedure)) {
 
             // Input parameter for the configuration key
             stmt.setString(1, key);

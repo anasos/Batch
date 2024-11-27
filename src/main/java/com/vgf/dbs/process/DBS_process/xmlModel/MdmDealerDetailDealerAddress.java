@@ -31,7 +31,7 @@ public class MdmDealerDetailDealerAddress {
         this.addressLine1 = addressLine1;
     }
 
-    @XmlElement(nillable = true)
+    @XmlElement
     public String getAddressLine2() {
         return addressLine2;
     }
